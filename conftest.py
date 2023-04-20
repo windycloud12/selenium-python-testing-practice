@@ -1,14 +1,16 @@
 import pytest
-from selenium import webdriver
 import config
+from selenium import webdriver
 from src.common.enums.webdriver_enum import WebDriverEnum
 from selenium.webdriver.chrome.service import Service
+from src.common.utils.logging_factory import logger
 
 
 def pytest_addoption(parser):
     parser.addoption(
         "--browser_name", action="store", default="chrome"
     )
+    logger.info('===========================================')
 
 
 @pytest.fixture(scope="class")
