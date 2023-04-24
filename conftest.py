@@ -1,9 +1,13 @@
 import pytest
-import config
+import config as config_doc
+import selenium
+import os
 from selenium import webdriver
 from src.common.enums.webdriver_enum import WebDriverEnum
 from selenium.webdriver.chrome.service import Service
 from src.common.utils.logging_factory import logger
+from py.xml import html
+from platform import python_version
 
 
 def pytest_addoption(parser):
@@ -13,11 +17,14 @@ def pytest_addoption(parser):
     logger.info('===========================================')
 
 
+driver_version = None
+
+
 @pytest.fixture(scope="class")
 def browser(request):
-    match config.DRIVER_TYPE:
+    match config_doc.DRIVER_TYPE:
         case WebDriverEnum.CHROME:
-            service = Service(config.DRIVER_ABS_PATH_CHROME)
+            service = Service(config_doc.DRIVER_ABS_PATH_CHROME)
             driver = webdriver.Chrome(service=service)
         case WebDriverEnum.FIREFOX:
             driver = webdriver.Firefox()
@@ -28,6 +35,55 @@ def browser(request):
         case _:
             driver = webdriver.Firefox()
 
+    global driver_version
+    driver_version = driver.execute_script("return navigator.userAgent;")
     request.cls.driver = driver
     yield
     driver.quit()
+
+
+def pytest_itemcollected(item):  # 把case中的三引号注释输出到输出中的用例列表
+    item._nodeid = item._nodeid.encode("unicode_escape").decode("utf-8")
+
+
+def pytest_html_report_title(report):
+    report.title = "測試報告"
+
+
+# 顯示環境
+def pytest_configure(config):
+    config._metadata.clear()
+    config._metadata['測試項目'] = "項目名"
+    config._metadata['測試地址'] = "網頁連結"
+    config._metadata['Python 版本'] = python_version()
+    config._metadata['Selenium 版本'] = selenium.__version__
+    config._metadata['瀏覽器'] = config_doc.DRIVER_TYPE.name
+    config.option.htmlpath = os.path.join(config_doc.REPORT_FOLDER_NAME, config_doc.REPORT_FILE_NAME)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionfinish(session, exitstatus):
+    global driver_version
+    session.config._metadata["瀏覽器版本"] = driver_version
+
+
+def pytest_html_results_summary(prefix, summary, postfix):
+    # prefix.clear()
+    prefix.extend([html.p("測試負責人: 張OO")])
+
+
+@pytest.mark.optionalhook
+def pytest_html_results_table_header(cells):
+    cells.insert(2, html.th('Description'))
+
+
+@pytest.mark.optionalhook
+def pytest_html_results_table_row(report, cells):
+    custom_description = getattr(report, "test_description", "")
+    cells.insert(2, html.td(custom_description))
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    outcome._result.test_description = item.function.__doc__

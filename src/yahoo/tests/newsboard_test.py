@@ -21,11 +21,12 @@ class TestNewboard(BaseTestClass):
         logger.info(f'結束 - {cls.__name__}')
 
     def setup(self):
-        if self.__class__.main_page.driver == None:
+        if self.__class__.main_page.driver is None:
             self.__class__.main_page = MainPage(self.driver)
 
     @pytest.mark.describe('檢查新聞看版重要元件的數量')
     def test_format_of_news_board(self, request):
+        """檢查新聞看版重要元件的數量"""
         logger.info(f'------- 開始 {request.node.name}')
         self.driver.get(self.url)
 
@@ -52,6 +53,7 @@ class TestNewboard(BaseTestClass):
 
     @pytest.mark.describe('檢查新聞看板的連結是否有效')
     def test_valid_of_link(self, request):
+        """檢查新聞看板的連結是否有效"""
         logger.info(f'------- 開始 {request.node.name}')
         # 取得連結
         links_of_each_panel = self.main_page.get_each_panel_links()

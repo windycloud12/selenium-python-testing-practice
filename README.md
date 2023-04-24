@@ -14,7 +14,7 @@ Execution
 - `python -m venv venv`　建立虛擬環境
 - `venv\scripts\activate` 開啟虛擬環境 
 - `pip install -r requirements.txt` 安裝依賴包
-- `pytest`
+- `run_tests.bat`
 
 Setting
 ---
@@ -22,6 +22,6 @@ Setting
 
 Output
 ---
-
-
+- reports\report.html
+- log\\*.log
 
