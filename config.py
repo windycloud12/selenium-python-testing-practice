@@ -5,8 +5,12 @@ from src.common.enums.webdriver_enum import WebDriverEnum
 
 PROJECT_DIRECTORY = os.getcwd()
 
+# Yahoo Loging info
+USER_ACCOUNT = "ABC"
+USER_PASSWORD = "ABC"
+
 # Driver
-DRIVER_TYPE = WebDriverEnum.CHROME
+DRIVER_TYPE = WebDriverEnum.FIREFOX
 DRIVER_VERSION_CHROME = 111
 DRIVER_ABS_PATH_CHROME = f"./resources/drivers/chromedriver{DRIVER_VERSION_CHROME}.exe"
 

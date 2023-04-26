@@ -1,3 +1,4 @@
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 from src.common.tests.base_page import BasePage
@@ -9,6 +10,8 @@ class Locator:
     NEWS_PANELS = (By.XPATH, "//div[@id='applet_p_50000313']//ul[contains(@class,'panels')]/li")
     NEWS_PANEL_IMAGE_LINK = (By.XPATH, "./div[contains(@id, '-content')]/div/div/ul/li/a")
     NEWS_PANEL_TEXT_LINK = (By.XPATH, "./div[contains(@id, '-content')]/div/ul/li/a")
+    LOGIN_LINK = (By.ID, "header-signin-link")
+    USER_PROFILE_BTN = (By.ID, "header-profile-button")
 
 
 class MainPage(BasePage):
@@ -44,3 +47,14 @@ class MainPage(BasePage):
             panels.append(links)
 
         return panels
+
+    def click_login_btn(self):
+        elm = self.driver.find_element(*Locator.LOGIN_LINK)
+        elm.click()
+
+    def check_login_success(self):
+        try:
+            elm = self.driver.find_element(*Locator.USER_PROFILE_BTN)
+            return True
+        except NoSuchElementException:
+            return False

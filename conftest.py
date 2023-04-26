@@ -42,10 +42,6 @@ def browser(request):
     driver.quit()
 
 
-def pytest_itemcollected(item):  # 把case中的三引号注释输出到输出中的用例列表
-    item._nodeid = item._nodeid.encode("unicode_escape").decode("utf-8")
-
-
 def pytest_html_report_title(report):
     report.title = "測試報告"
 
@@ -66,6 +62,13 @@ def pytest_sessionfinish(session, exitstatus):
     global driver_version
     session.config._metadata["瀏覽器版本"] = driver_version
 
+def pytest_collection_modifyitems(items):
+    for item in items:
+        # 中文要轉碼, 在 console 才不會亂碼
+        item.name = item.name.encode('utf-8').decode('unicode-escape')
+
+        # 中文要轉碼, 在 IDE 測試介面才不會亂碼
+        item._nodeid = item.nodeid.encode('utf-8').decode('unicode-escape')
 
 def pytest_html_results_summary(prefix, summary, postfix):
     # prefix.clear()
@@ -82,8 +85,13 @@ def pytest_html_results_table_row(report, cells):
     custom_description = getattr(report, "test_description", "")
     cells.insert(2, html.td(custom_description))
 
+    # 由於前面有轉碼過, 這裡要轉回來, 否則經過 pytest_html\result.py 再次轉碼後會變成亂碼
+    cells[1][0] = cells[1][0].encode('latin1').decode('utf-8')
+
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
+
+    # 將函數的三個雙引號說明欄, 寫入報告裡
     outcome._result.test_description = item.function.__doc__
