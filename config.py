@@ -20,5 +20,10 @@ LOG_FILE_NAME = f'{datetime.datetime.now().strftime("%Y%m%d")}.log'
 LOG_PATH = f'{PROJECT_DIRECTORY}/log'
 
 # Report
+REPORT_TIMESTAMP = datetime.datetime.now()
 REPORT_FOLDER_NAME = f'reports'
-REPORT_FILE_NAME = f'report_{datetime.datetime.now().strftime("%Y%m%d%H%M")}.html'
+REPORT_FILE_NAME = f'report_{REPORT_TIMESTAMP.strftime("%Y%m%d%H%M")}.html'
+
+# Screenshot
+SCREENSHOT_FOLDER_NAME = f'screenshot_{REPORT_TIMESTAMP.strftime("%Y%m%d%H%M")}'
+SCREENSHOT_DIRECTORY = os.path.join(PROJECT_DIRECTORY, REPORT_FOLDER_NAME, SCREENSHOT_FOLDER_NAME)

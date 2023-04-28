@@ -61,6 +61,10 @@ def pytest_configure(config):
 def pytest_sessionfinish(session, exitstatus):
     global driver_version
     session.config._metadata["瀏覽器版本"] = driver_version
+    session.config._metadata.pop("Base URL")
+    session.config._metadata.pop("Capabilities")
+    session.config._metadata.pop("Driver")
+
 
 def pytest_collection_modifyitems(items):
     for item in items:
@@ -70,6 +74,7 @@ def pytest_collection_modifyitems(items):
         # 中文要轉碼, 在 IDE 測試介面才不會亂碼
         item._nodeid = item.nodeid.encode('utf-8').decode('unicode-escape')
 
+
 def pytest_html_results_summary(prefix, summary, postfix):
     # prefix.clear()
     prefix.extend([html.p("測試負責人: 張OO")])
@@ -77,13 +82,15 @@ def pytest_html_results_summary(prefix, summary, postfix):
 
 @pytest.mark.optionalhook
 def pytest_html_results_table_header(cells):
-    cells.insert(2, html.th('Description'))
+    cells.pop()
+    cells.insert(2, html.th('Description', class_="sortable", col="description"))
 
 
 @pytest.mark.optionalhook
 def pytest_html_results_table_row(report, cells):
+    cells.pop()
     custom_description = getattr(report, "test_description", "")
-    cells.insert(2, html.td(custom_description))
+    cells.insert(2, html.td(custom_description, class_="col-description"))
 
     # 由於前面有轉碼過, 這裡要轉回來, 否則經過 pytest_html\result.py 再次轉碼後會變成亂碼
     cells[1][0] = cells[1][0].encode('latin1').decode('utf-8')
@@ -92,6 +99,23 @@ def pytest_html_results_table_row(report, cells):
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
+    report = outcome.get_result()
 
     # 將函數的三個雙引號說明欄, 寫入報告裡
-    outcome._result.test_description = item.function.__doc__
+    report.test_description = item.function.__doc__
+
+    if report.when == "call":
+        if not report.passed:
+            if not os.path.exists(config_doc.SCREENSHOT_DIRECTORY):
+                os.mkdir(config_doc.SCREENSHOT_DIRECTORY)
+
+            shot_name = report.head_line.replace(".", "_")+".png"
+            shot_full_path = os.path.join(config_doc.SCREENSHOT_DIRECTORY, shot_name)
+
+            shot_ok = item.cls.driver.get_screenshot_as_file(shot_full_path)
+            pytest_html = item.config.pluginmanager.getplugin("html")
+
+            if shot_ok:
+                report.extra.append(pytest_html.extras.image(shot_full_path))
+            else:
+                report.extra.append(pytest_html.extras.text('截圖失敗'))
